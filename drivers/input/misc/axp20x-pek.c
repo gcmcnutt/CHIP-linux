@@ -33,6 +33,8 @@ struct axp20x_pek {
 	struct input_dev *input;
 	int irq_dbr;
 	int irq_dbf;
+	int irq_short;
+	int ieq_long;
 };
 
 struct axp20x_time {
@@ -168,13 +170,16 @@ static irqreturn_t axp20x_pek_irq(int irq, void *pwr)
 	struct axp20x_pek *axp20x_pek = input_get_drvdata(idev);
 
 	/*
-	 * The power-button is connected to ground so a falling edge (dbf)
-	 * means it is pressed.
+	 * Direct interrupt to 'key' -- TODO, no up events for short/long
 	 */
 	if (irq == axp20x_pek->irq_dbf)
 		input_report_key(idev, KEY_POWER, true);
 	else if (irq == axp20x_pek->irq_dbr)
 		input_report_key(idev, KEY_POWER, false);
+	else if (irq == axp20x_pek->irq_SHORT)
+		input_report_key(idev, KEY_COFFEE, true);
+	else if (irq == axp20x_pek->irq_LONG)
+		input_report_key(idev, KEY_CONFIG, true);
 
 	input_sync(idev);
 
@@ -218,6 +223,21 @@ static int axp20x_pek_probe(struct platform_device *pdev)
 				axp20x_pek->irq_dbf);
 		return axp20x_pek->irq_dbf;
 	}
+
+	axp20x_pek->irq_dbf = platform_get_irq_byname(pdev, "PEK_SHORT");
+	if (axp20x_pek->irq_short < 0) {
+		dev_err(&pdev->dev, "No IRQ for PEK_SHORT, error=%d\n",
+				axp20x_pek->irq_short);
+		return axp20x_pek->irq_short;
+	}
+
+	axp20x_pek->irq_dbf = platform_get_irq_byname(pdev, "PEK_LONG");
+	if (axp20x_pek->irq_long < 0) {
+		dev_err(&pdev->dev, "No IRQ for PEK_LONG, error=%d\n",
+				axp20x_pek->irq_long);
+		return axp20x_pek->irq_long;
+	}
+
 	axp20x_pek->irq_dbf = regmap_irq_get_virq(axp20x->regmap_irqc,
 						  axp20x_pek->irq_dbf);
 
@@ -232,6 +252,8 @@ static int axp20x_pek_probe(struct platform_device *pdev)
 	idev->dev.parent = &pdev->dev;
 
 	input_set_capability(idev, EV_KEY, KEY_POWER);
+	input_set_capability(idev, EV_KEY, KEY_COFFEE);
+	input_set_capability(idev, EV_KEY, KEY_CONFIG);
 
 	input_set_drvdata(idev, axp20x_pek);
 
@@ -250,6 +272,24 @@ static int axp20x_pek_probe(struct platform_device *pdev)
 	if (error < 0) {
 		dev_err(axp20x->dev, "Failed to request dbf IRQ#%d: %d\n",
 			axp20x_pek->irq_dbf, error);
+		return error;
+	}
+
+	error = devm_request_any_context_irq(&pdev->dev, axp20x_pek->irq_short,
+					  axp20x_pek_irq, 0,
+					  "axp20x-pek-short", idev);
+	if (error < 0) {
+		dev_err(axp20x->dev, "Failed to request short IRQ#%d: %d\n",
+			axp20x_pek->irq_short, error);
+		return error;
+	}
+
+	error = devm_request_any_context_irq(&pdev->dev, axp20x_pek->irq_long,
+					  axp20x_pek_irq, 0,
+					  "axp20x-pek-long", idev);
+	if (error < 0) {
+		dev_err(axp20x->dev, "Failed to request long IRQ#%d: %d\n",
+			axp20x_pek->irq_long, error);
 		return error;
 	}
 

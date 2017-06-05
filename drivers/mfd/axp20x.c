@@ -137,6 +137,16 @@ static struct resource axp20x_pek_resources[] = {
 		.start	= AXP20X_IRQ_PEK_FAL_EDGE,
 		.end	= AXP20X_IRQ_PEK_FAL_EDGE,
 		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "PEK_SHORT",
+		.start	= AXP20X_IRQ_PEK_SHORT,
+		.end	= AXP20X_IRQ_PEK_SHORT,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "PEK_LONG",
+		.start	= AXP20X_IRQ_PEK_LONG,
+		.end	= AXP20X_IRQ_PEK_LONG,
+		.flags	= IORESOURCE_IRQ,
 	},
 };
 
