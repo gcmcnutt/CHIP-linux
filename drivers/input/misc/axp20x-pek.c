@@ -34,7 +34,7 @@ struct axp20x_pek {
 	int irq_dbr;
 	int irq_dbf;
 	int irq_short;
-	int ieq_long;
+	int irq_long;
 };
 
 struct axp20x_time {
@@ -176,9 +176,9 @@ static irqreturn_t axp20x_pek_irq(int irq, void *pwr)
 		input_report_key(idev, KEY_POWER, true);
 	else if (irq == axp20x_pek->irq_dbr)
 		input_report_key(idev, KEY_POWER, false);
-	else if (irq == axp20x_pek->irq_SHORT)
+	else if (irq == axp20x_pek->irq_short)
 		input_report_key(idev, KEY_COFFEE, true);
-	else if (irq == axp20x_pek->irq_LONG)
+	else if (irq == axp20x_pek->irq_long)
 		input_report_key(idev, KEY_CONFIG, true);
 
 	input_sync(idev);
