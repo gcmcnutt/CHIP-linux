@@ -224,14 +224,14 @@ static int axp20x_pek_probe(struct platform_device *pdev)
 		return axp20x_pek->irq_dbf;
 	}
 
-	axp20x_pek->irq_dbf = platform_get_irq_byname(pdev, "PEK_SHORT");
+	axp20x_pek->irq_short = platform_get_irq_byname(pdev, "PEK_SHORT");
 	if (axp20x_pek->irq_short < 0) {
 		dev_err(&pdev->dev, "No IRQ for PEK_SHORT, error=%d\n",
 				axp20x_pek->irq_short);
 		return axp20x_pek->irq_short;
 	}
 
-	axp20x_pek->irq_dbf = platform_get_irq_byname(pdev, "PEK_LONG");
+	axp20x_pek->irq_long = platform_get_irq_byname(pdev, "PEK_LONG");
 	if (axp20x_pek->irq_long < 0) {
 		dev_err(&pdev->dev, "No IRQ for PEK_LONG, error=%d\n",
 				axp20x_pek->irq_long);
